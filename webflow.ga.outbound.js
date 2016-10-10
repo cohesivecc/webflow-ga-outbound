@@ -88,7 +88,7 @@ Webflow.push(function () {
 
     // link clicked
     handleClick: function(e) {
-      var href = e.target.href;
+      var href = e.currentTarget.href;
       var evt = null;
       if(OutboundLink.isFile(href)) {
         evt = [
@@ -107,7 +107,7 @@ Webflow.push(function () {
       }
       if(evt) {
         // if it doesn't open in a new window, don't navigate until after GA tracks the click.
-        if($.trim(e.target.target) == '') {
+        if($.trim(e.currentTarget.target) == '') {
           e.preventDefault();
           e.stopPropagation();
           _gaq.push(['_set','hitCallback', function() { document.location = href; }])
