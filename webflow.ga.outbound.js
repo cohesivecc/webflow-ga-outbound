@@ -8,7 +8,7 @@
 var Webflow = Webflow || [];
 Webflow.push(function () {
 
-  var OutboundLink = {
+  window.OutboundLink = {
     options: {
       selector: 'a',
       domain_whitelist: [location.hostname],
@@ -67,9 +67,15 @@ Webflow.push(function () {
 
     isFile: function(url) {
       // remove the domain portion of the url, split by '/' and take the last one, strip off query params, split by '.', take last element
-      var ext = url.replace(/^(https?:)?\/\/[^\/]*/, '').split('/').pop().replace(/[\?\#](.+)?$/i, "").split('.').pop()
-      if($.trim(ext) != '' && $.inArray(OutboundLink.options.extension_whitelist, ext) < 0) {
-        return true;
+      var basename = url.replace(/^(https?:)?\/\/[^\/]*/, '').split('/').pop().replace(/[\?\#](.+)?$/i, "");
+      var parts = basename.split('.')
+      if(parts.length > 1) {
+        var ext = parts.pop();
+        if($.trim(ext) != '' && $.inArray(OutboundLink.options.extension_whitelist, ext) < 0) {
+          return true;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }
