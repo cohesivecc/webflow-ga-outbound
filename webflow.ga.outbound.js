@@ -33,7 +33,7 @@ Webflow.push(function () {
     // Compose the regex from the whitelisted domains
     updateRegexp: function() {
       var urls = $.map(OutboundLink.options.domain_whitelist, function(s, i) {
-                    return s.replace(new RegExp(/\./, 'g'), "\\.");
+                    return s.replace(/\./g, "\\.");
                   });
       OutboundLink.regExp = new RegExp("^https?:\/\/(" + urls.join('|') + ")", "i");
     },
