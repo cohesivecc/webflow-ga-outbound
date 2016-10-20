@@ -23,3 +23,6 @@ Webflow.push(function () {
   OutboundLink.whitelistFileExtension(['zip', 'doc']);
 });
 ```
+
+### License
+This library is licensed under the [MIT License](http://www.opensource.org/licenses/MIT).

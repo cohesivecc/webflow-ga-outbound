@@ -2,6 +2,8 @@
  * Webflow GA Outbound: Webflow-friendly Google Analytics event tracking for clicks on outbound links and files.
  * @license MIT
  * @author Neal White - http://www.cohesive.cc
+ *
+ * https://github.com/cohesivecc/webflow-ga-outbound
 */
 
 
