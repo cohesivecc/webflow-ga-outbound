@@ -12,7 +12,7 @@ Webflow.push(function () {
 
   window.OutboundLink = {
     options: {
-      selector: 'a',
+      selector: 'a[href]',
       domain_whitelist: [location.hostname],
       extension_whitelist: ['html', 'xml', 'asp', 'php']
     },
