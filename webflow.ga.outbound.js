@@ -24,7 +24,7 @@ Webflow.push(function () {
         throw("jQuery is required for OutboundLink.");
         return false;
       }
-      if(typeof(window._gaq) != 'object') {
+      if(typeof(window._gaq) != 'object' && typeof(window.ga) != 'function') {
         throw("Google Analytics is required for OutboundLink.")
         return false;
       }
@@ -98,30 +98,57 @@ Webflow.push(function () {
     handleClick: function(e) {
       var href = e.currentTarget.href;
       var evt = null;
-      if(OutboundLink.isFile(href)) {
-        evt = [
-          '_trackEvent',
-          'Outbound Click',
-          'File',
-          href
-        ];
-      } else if(OutboundLink.isOutbound(href)) {
-        evt = [
-          '_trackEvent',
-          'Outbound Click',
-          'Link',
-          href
-        ];
-      }
-      if(evt) {
-        // if it doesn't open in a new window, don't navigate until after GA tracks the click.
-        if($.trim(e.currentTarget.target) == '') {
-          e.preventDefault();
-          e.stopPropagation();
-          _gaq.push(['_set','hitCallback', function() { document.location = href; }])
+
+      if(window.ga) {
+        evt = {
+          hitType: 'event',
+          eventCategory: 'Outbound Click',
+          eventLabel: href
+        };
+        if(OutboundLink.isFile(href)) {
+          evt.eventAction = 'File';
+        } else if(OutboundLink.isOutbound(href)) {
+          evt.eventAction = 'Link';
         }
-        _gaq.push(evt);
+        if(evt) {
+          if($.trim(e.currentTarget.target) == '') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            evt.hitCallback = function() {
+              document.location = href;
+            }
+          }
+          ga('send', evt);
+        }
+      } else {
+        // old version of Google Analytics
+        if(OutboundLink.isFile(href)) {
+          evt = [
+            '_trackEvent',
+            'Outbound Click',
+            'File',
+            href
+          ];
+        } else if(OutboundLink.isOutbound(href)) {
+          evt = [
+            '_trackEvent',
+            'Outbound Click',
+            'Link',
+            href
+          ];
+        }
+        if(evt) {
+          // if it doesn't open in a new window, don't navigate until after GA tracks the click.
+          if($.trim(e.currentTarget.target) == '') {
+            e.preventDefault();
+            e.stopPropagation();
+            _gaq.push(['_set','hitCallback', function() { document.location = href; }])
+          }
+          _gaq.push(evt);
+        }
       }
+
     }
 
   }
