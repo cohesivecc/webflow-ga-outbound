@@ -132,7 +132,7 @@ Webflow.push(function() {
         .replace(/^(https?:)?\/\/[^\/]*/, '')
         .match(/\.([0-9a-z]+)$/i)
       
-      return !!(m && m[0] && $.inArray(OutboundLink.options.extension_whitelist, m[0]) < 0)
+      return !!(m && m[1] && $.inArray(OutboundLink.options.extension_whitelist, m[1]) < 0)
       
     },
 
