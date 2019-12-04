@@ -12,7 +12,14 @@ Webflow.push(function() {
     options: {
       selector: 'a[href]',
       domain_whitelist: [location.hostname],
-      extension_whitelist: ['html', 'xml', 'asp', 'php']
+      extension_whitelist: [
+        'html', 'htm', 'xhtml', 'jhtml', 'shtml', 
+        'asp', 'aspx', 'axd', 'asx', 'asmx', 'ashx', 'cgi', 'dll',
+        'cfm', 'yaws',
+        'php', 'php4', 'php3', 'phtml', 'py',
+        'jsp', 'jspx', 'wss', 'do', 'action',
+        'xml', 'rss', 'atom'
+      ]
     },
     regExp: null,
     GAVersion: null,
@@ -52,6 +59,7 @@ Webflow.push(function() {
           gtag('event', action, {
             'event_category': category,
             'event_label': label,
+            'event_callback': hitCallback
           });
           break;
         case 'ga':
@@ -118,25 +126,14 @@ Webflow.push(function() {
 
     isFile: function(url) {
       // remove the domain portion of the url, split by '/' and take the last one, strip off query params, split by '.', take last element
-      var basename = url
+      
+      var m = url
+        .replace(/[\?\#](.+)?$/i, '')
         .replace(/^(https?:)?\/\/[^\/]*/, '')
-        .split('/')
-        .pop()
-        .replace(/[\?\#](.+)?$/i, '');
-      var parts = basename.split('.');
-      if (parts.length > 1) {
-        var ext = parts.pop();
-        if (
-          $.trim(ext) != '' &&
-          $.inArray(OutboundLink.options.extension_whitelist, ext) < 0
-        ) {
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
+        .match(/\.([0-9a-z]+)$/i)
+      
+      return !!(m && m[0] && $.inArray(OutboundLink.options.extension_whitelist, m[0]) < 0)
+      
     },
 
     getTypeForURL: function(url) {
