@@ -15,6 +15,7 @@ Webflow.push(function() {
       extension_whitelist: ['html', 'xml', 'asp', 'php']
     },
     regExp: null,
+    GAVersion: null,
 
     // Initialize the library, listen for clicks
     initialize: function() {
@@ -22,12 +23,59 @@ Webflow.push(function() {
         throw 'jQuery is required for OutboundLink.';
         return false;
       }
-      if (typeof window._gaq != 'object' && typeof window.ga != 'function') {
+
+      OutboundLink.setGAVersion();
+      if (!OutboundLink.GAVersion) {
         throw 'Google Analytics is required for OutboundLink.';
         return false;
-      }
+      } 
+      
       OutboundLink.updateRegexp();
       OutboundLink.listen();
+    },
+
+    // set GA version
+    setGAVersion: function() {
+      // typeof window._gaq != 'object' && typeof window.ga != 'function' && typeof window.gtag != 'function'
+      if(typeof window.gtag == 'function') {
+        OutboundLink.GAVersion = 'gtag'
+      } else if(typeof window.ga == 'function') {
+        OutboundLink.GAVersion = 'ga'
+      } else if(typeof window._gaq == 'object') {
+        OutboundLink.GAVersion = '_gaq'
+      }      
+    },
+
+    sendEvent: function(action, category, label, hitCallback) {
+      switch(OutboundLink.GAVersion) {
+        case 'gtag':
+          gtag('event', action, {
+            'event_category': category,
+            'event_label': label,
+          });
+          break;
+        case 'ga':
+          ga('send', {
+            hitType: 'event',
+            eventAction: action,
+            eventCategory: category,
+            eventLabel: label,
+            hitCallback: hitCallback
+          })
+          break;
+        case '_gaq':
+          if(hitCallback) {
+            _gaq.push([
+              '_set',
+              'hitCallback',
+              hitCallback
+            ]);
+          }
+          _gaq.push(['_trackEvent', category, action, label, undefined]);
+          break;
+        default:
+          break;
+      }
     },
 
     // Compose the regex from the whitelisted domains
@@ -91,6 +139,16 @@ Webflow.push(function() {
       }
     },
 
+    getTypeForURL: function(url) {
+      if(OutboundLink.isFile(url)) {
+        return 'File';
+      } else if(OutboundLink.isOutbound(url)) {
+        return 'Link';
+      } else {
+        return null;
+      }
+    },
+
     // Pause listener
     pause: function() {
       $(document).off(
@@ -112,67 +170,23 @@ Webflow.push(function() {
 
     // link clicked
     handleClick: function(e) {
-      var href = e.currentTarget.href;
-      var evt = null;
-      try {
-        if (window.ga) {
-          evt = {
-            hitType: 'event',
-            eventCategory: 'Outbound Click',
-            eventLabel: href,
-            hitCallback: null
-          };
-          if (OutboundLink.isFile(href)) {
-            evt.eventAction = 'File';
-          } else if (OutboundLink.isOutbound(href)) {
-            evt.eventAction = 'Link';
-          }
-          if (evt) {
-            // if it doesn't open in a new window, don't navigate until after GA tracks the click.
-            if ($.trim(e.currentTarget.target) == '') {
-              e.preventDefault();
-              e.stopPropagation();
+      var action = OutboundLink.getTypeForURL(e.currentTarget.href)
 
-              evt.hitCallback = function() {
-                document.location = href;
-              };
-            }
-            if ('ga' in window) {
-              tracker = ga.getAll()[0];
-              if (tracker) {
-                tracker.send('send', evt);
-              }
-            } else {
-              if (ga('send', evt) === undefined) {
-                document.location = href;
-              }
-            }
-          }
-        } else {
-          // old version of Google Analytics
-          if (OutboundLink.isFile(href)) {
-            evt = ['_trackEvent', 'Outbound Click', 'File', href];
-          } else if (OutboundLink.isOutbound(href)) {
-            evt = ['_trackEvent', 'Outbound Click', 'Link', href];
-          }
-          if (evt) {
-            // if it doesn't open in a new window, don't navigate until after GA tracks the click.
-            if ($.trim(e.currentTarget.target) == '') {
-              e.preventDefault();
-              e.stopPropagation();
-              _gaq.push([
-                '_set',
-                'hitCallback',
-                function() {
-                  document.location = href;
-                }
-              ]);
-            }
-            _gaq.push(evt);
+      if(action) {
+
+        var callback = null
+        // if it doesn't open in a new window, don't navigate until after GA tracks the click.
+        if($.trim(e.currentTarget.target) == '') {
+          e.preventDefault();
+          e.stopPropagation();
+          callback = function() {
+            document.location = e.currentTarget.href;
           }
         }
-      } catch (e) {
-        document.location = href;
+
+        OutboundLink.sendEvent(action, 'Outbound Click', e.currentTarget.href, callback)
+      } else {
+        return true;
       }
     }
   };
